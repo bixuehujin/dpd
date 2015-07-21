@@ -1,0 +1,29 @@
+#! /usr/bin/env python
+
+import os
+
+git_url = os.environ['GIT_URL']
+git_path = os.environ['GIT_PATH']
+base_dir = os.getcwd();
+
+target_path = base_dir + '/' + git_path
+
+
+def git_pull():
+	os.system("cd %s; git reset --hard master; git pull origin master" % target_path)
+
+
+def build():
+	pass
+
+
+def main():
+	if not os.path.isdir(target_path):
+		os.makedirs(target_path)
+
+	if not os.path.isdir(target_path  + '/.git'):
+		os.system("git clone %s %s" % (git_url, target_path))
+	else:
+		git_pull()
+
+	build();
