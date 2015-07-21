@@ -1,29 +1,83 @@
 #! /usr/bin/env python
 
 import os
+import json
+import shutil
+
+from os import path
 
 git_url = os.environ['GIT_URL']
 git_path = os.environ['GIT_PATH']
 base_dir = os.getcwd();
+default_target_path = os.environ['DEFAULT_TARGET_PATH']
 
 target_path = base_dir + '/' + git_path
 
+def run_command(command):
+	os.system("cd %s; %s" % (target_path, command))
 
 def git_pull():
-	os.system("cd %s; git reset --hard master; git pull origin master" % target_path)
+	run_command("git reset --hard master; git pull origin master")
 
+def resolve_config():
+	config = {}
+	if path.isfile(target_path + '/deployment.json'):
+		fd = open(target_path + '/deployment.json')
+		config = json.load(fd)
+		fd.close()
+
+	if 'dist' not in config:
+		config['dist'] = 'dist'
+	if 'target' not in config:
+		config['target'] = default_target_path + '/' + git_path
+
+	return config
 
 def build():
-	pass
+	config = resolve_config()
 
+	commands = [
+		('/package.json', 'npm install'),
+		('/bower.json', 'bower install'),
+		('/Gulpfile.js', 'gulp build'),
+		#('/Gruntfile.js', 'grunt build'),
+	]
+
+	for (f, c) in commands:
+		if (path.isfile(target_path + f)):
+			print "Starting run command: %s" % c
+			run_command(c)
+
+	if not path.exists(target_path + '/' + config['dist']):
+		print 'error: dist path: %s does not exists' % config['dist']
+		return
+
+	if path.exists(config['target']):
+		shutil.move(config['target'], config['target'] + '.old')
+
+	try:
+		print "Moving %s to %s" % (target_path + '/' + config['dist'], config['target'])
+		parent_dir = path.dirname(config['target'])
+		if not path.exists(parent_dir):
+			os.makedirs(parent_dir)
+		shutil.move(target_path + '/' + config['dist'], config['target'])
+		print 'Success'
+	except:
+		shutil.move(config['target'] + '.old', config['target'])
+
+	if path.exists(config['target'] + '.old'):
+		shutil.rmtree(config['target'] + '.old')
 
 def main():
 	if not os.path.isdir(target_path):
 		os.makedirs(target_path)
 
 	if not os.path.isdir(target_path  + '/.git'):
-		os.system("git clone %s %s" % (git_url, target_path))
+		run_command("git clone %s . --depth=10" % git_url)
 	else:
 		git_pull()
 
 	build();
+
+if __name__ == '__main__':
+	main();

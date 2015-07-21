@@ -1,5 +1,6 @@
 var http = require('http')
 var bl = require('bl');
+var logger = require('winston');
 
 
 function run_cmd(cmd, args, options, callback) {
@@ -17,11 +18,12 @@ function run_cmd(cmd, args, options, callback) {
 }
 
 http.createServer(function (req, res) {
+  logger.info('%s %s', req.method, req.url);
 
   req.pipe(bl(function (error, data) {
 
     if (error) {
-      console.error(error);
+      logger.error("failed to parse request: %j", error);
       res.end('error')
       return;
     }
@@ -30,7 +32,7 @@ http.createServer(function (req, res) {
     try {
       obj = JSON.parse(data.toString())
     } catch (e) {
-      console.error(error);
+      logger.error("failed to parse json: %s", e.message);
       res.end('error')
       return
     }
@@ -40,14 +42,19 @@ http.createServer(function (req, res) {
     }
 
     var path = obj.repository.url.split(":")[1].split('.')[0];
+    var envs = {
+      GIT_PATH: path,
+      GIT_URL: obj.repository.url,
+      GIT_SSH: process.cwd() + '/git_ssh',
+      DEFAULT_TARGET_PATH: './targets'
+    };
+
+    logger.info("Starting to run ./deploy with env:", envs);
 
     run_cmd('./deploy', [], {
-      env: {
-        GIT_PATH: path,
-        GIT_URL: obj.repository.url
-      }
+      env: envs
     }, function (data) {
-      console.log(data)
+      logger.info('command output: %s', data)
     });
 
     res.end();
