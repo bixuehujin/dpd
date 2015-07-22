@@ -13,71 +13,121 @@ default_target_path = os.environ['DEFAULT_TARGET_PATH']
 
 target_path = base_dir + '/' + git_path
 
-def run_command(command):
-	os.system("cd %s; %s" % (target_path, command))
+# GIT_URL=git@git.seiue.com:ichalk/frontend.git GIT_PATH=ichalk/frontend DEFAULT_TARGET_PATH= ./deploy
 
-def git_pull():
-	run_command("git reset --hard master; git pull origin master")
+class Builder(object):
 
-def resolve_config():
-	config = {}
-	if path.isfile(target_path + '/deployment.json'):
-		fd = open(target_path + '/deployment.json')
-		config = json.load(fd)
-		fd.close()
+	def __init__(self, path):
+		self.path = path
+		self.config = None
 
-	if 'dist' not in config:
-		config['dist'] = 'dist'
-	if 'target' not in config:
-		config['target'] = default_target_path + '/' + git_path
+	def exec_command(self, command):
+		os.system("cd %s; %s" % (self.path, command))
 
-	return config
 
-def build():
-	config = resolve_config()
+	def fetch_repo(self):
+		if not path.isdir(self.path):
+			os.makedirs(self.path)
 
-	commands = [
-		('/package.json', 'npm install'),
-		('/bower.json', 'bower install'),
-		('/Gulpfile.js', 'gulp build'),
-		#('/Gruntfile.js', 'grunt build'),
-	]
+		if not os.path.isdir(target_path  + '/.git'):
+			self.exec_command("git clone %s . --depth=10" % git_url)			
+		else:
+			self.exec_command("git reset --hard master && git remote set-url origin %s && git fetch origin && git checkout origin" % git_url)
 
-	for (f, c) in commands:
-		if (path.isfile(target_path + f)):
-			print "Starting run command: %s" % c
-			run_command(c)
 
-	if not path.exists(target_path + '/' + config['dist']):
-		print 'error: dist path: %s does not exists' % config['dist']
-		return
+	def load_config(self):
+		if self.config is not None:
+			return self.config
 
-	if path.exists(config['target']):
-		shutil.move(config['target'], config['target'] + '.old')
+		config = {}
+		if path.isfile(target_path + '/deployment.json'):
+			fd = open(target_path + '/deployment.json')
+			config = json.load(fd)
+			fd.close()
 
-	try:
-		print "Moving %s to %s" % (target_path + '/' + config['dist'], config['target'])
-		parent_dir = path.dirname(config['target'])
-		if not path.exists(parent_dir):
-			os.makedirs(parent_dir)
-		shutil.move(target_path + '/' + config['dist'], config['target'])
-		print 'Success'
-	except:
-		shutil.move(config['target'] + '.old', config['target'])
+		if 'targets' not in config:
+			config['targets'] = []
 
-	if path.exists(config['target'] + '.old'):
-		shutil.rmtree(config['target'] + '.old')
+		self.config = config
 
-def main():
-	if not os.path.isdir(target_path):
-		os.makedirs(target_path)
+		return self.config
 
-	if not os.path.isdir(target_path  + '/.git'):
-		run_command("git clone %s . --depth=10" % git_url)
-	else:
-		git_pull()
 
-	build();
+	def install_deps(self, config):
+
+		if path.isfile(self.path + '/package.json'):
+			self.exec_command('npm install')
+
+		if path.isfile(self.path + '/bower.json'):
+			self.exec_command('bower install')
+
+
+	def resolve_build_type(self, config):
+		build_type = None
+		if 'type' in config:
+			build_type = config['type']
+		elif path.isfile(self.path + '/Gulpfile.js'):
+			build_type = 'gulp'
+		elif path.isfile(self.path + '/Gruntfile.js'):
+			build_type = 'grunt'
+
+		if build_type not in ['gulp', 'grunt', None]:
+			raise Error('Build type: %s is not supportted' % build_type)
+
+		return build_type
+
+
+	def move(self, src, dst):
+		if path.exists(dst):
+			shutil.move(dst, dst + '.old')
+
+		try:
+			print "Moving %s to %s" % (src, dst)
+			parent_dir = path.dirname(dst)
+			if not path.exists(parent_dir):
+				os.makedirs(parent_dir)
+			shutil.move(src, dst)
+			print 'Moved success'
+		except:
+			shutil.move(dst + '.old', dst)
+
+		if path.exists(dst + '.old'):
+			shutil.rmtree(dst + '.old')
+
+
+	def build_target(self, build_type, target):
+		if build_type == 'gulp' and 'build' not in target:
+			target['build'] = 'gulp build'
+		if build_type == 'grunt' and build not in target:
+			target['build'] = 'grunt build'
+
+		if build_type is not None:
+			self.exec_command(target['build'])
+
+		if not path.exists(self.path + '/' + target['src']):
+			print 'error: target %s does not exists' % target['src']
+			return
+
+		if 'dst' not in target:
+			target['dst'] = default_target_path
+
+		self.move(self.path + '/' + target['src'], target['dst'])
+
+
+	def build(self):
+		self.fetch_repo()
+
+		config = self.load_config()
+
+		self.install_deps(config)
+
+		build_type = self.resolve_build_type(config)
+
+		for target in config['targets']:
+			self.build_target(build_type, target)
+
+	
 
 if __name__ == '__main__':
-	main();
+	builder = Builder(target_path)
+	builder.build()

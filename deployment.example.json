@@ -1,4 +1,18 @@
 {
-  "dist": "dist",
-  "target": "path/to/target"
+  "name": "name",
+  "type": "gulp",
+  "targets": [
+    {
+      "name": "prod",
+      "src": "dist",
+      "dst": "/path/to/target",
+      "build": "gulp build-prod"
+    },
+    {
+      "name": "test",
+      "src": "dist",
+      "dst": "/path/to/target",
+      "build": "gulp build"
+    }
+  ]
 }
