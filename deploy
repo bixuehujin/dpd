@@ -98,7 +98,7 @@ class Builder(object):
 	def build_target(self, build_type, target):
 		if build_type == 'gulp' and 'build' not in target:
 			target['build'] = 'gulp build'
-		if build_type == 'grunt' and build not in target:
+		if build_type == 'grunt' and 'build' not in target:
 			target['build'] = 'grunt build'
 
 		if build_type is not None:

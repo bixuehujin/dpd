@@ -8,7 +8,13 @@ function run_cmd(cmd, args, options, callback) {
   var child = spawn(cmd, args, options);
   var resp = "";
 
-  child.stdout.on('data', function(buffer) { resp += buffer.toString(); });
+  child.stdout.on('data', function(buffer) {
+    logger.info(buffer.toString());
+    resp += buffer.toString();
+  });
+  child.stderr.on('data', function(buffer) {
+    logger.info(buffer.toString());
+  });
   child.stdout.on('end', function() {
     callback && callback (resp)
   });
@@ -45,7 +51,7 @@ http.createServer(function (req, res) {
     var envs = {
       GIT_PATH: path,
       GIT_URL: obj.repository.url,
-      GIT_SSH: process.cwd() + '/git_ssh',
+      GIT_SSH: __dirname + '/git_ssh',
       DEFAULT_TARGET_PATH: './targets'
     };
 
