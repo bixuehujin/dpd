@@ -5,6 +5,7 @@ import json
 import shutil
 
 from os import path
+from mover import Mover
 
 git_url = os.environ['GIT_URL']
 git_path = os.environ['GIT_PATH']
@@ -14,6 +15,7 @@ default_target_path = os.environ['DEFAULT_TARGET_PATH']
 target_path = base_dir + '/' + git_path
 
 # GIT_URL=git@git.seiue.com:ichalk/frontend.git GIT_PATH=ichalk/frontend DEFAULT_TARGET_PATH= ./deploy
+
 
 class Builder(object):
 
@@ -77,22 +79,9 @@ class Builder(object):
 		return build_type
 
 
-	def move(self, src, dst):
-		if path.exists(dst):
-			shutil.move(dst, dst + '.old')
-
-		try:
-			print "Moving %s to %s" % (src, dst)
-			parent_dir = path.dirname(dst)
-			if not path.exists(parent_dir):
-				os.makedirs(parent_dir)
-			shutil.move(src, dst)
-			print 'Moved success'
-		except:
-			shutil.move(dst + '.old', dst)
-
-		if path.exists(dst + '.old'):
-			shutil.rmtree(dst + '.old')
+	def move(self, src, dst, options):
+		mover = Mover.createInstance(src, dst, options)
+		mover.move()
 
 
 	def build_target(self, build_type, target):
@@ -111,7 +100,7 @@ class Builder(object):
 		if 'dst' not in target:
 			target['dst'] = default_target_path
 
-		self.move(self.path + '/' + target['src'], target['dst'])
+		self.move(self.path + '/' + target['src'], target['dst'], target.get('dstOptions', {}))
 
 
 	def build(self):

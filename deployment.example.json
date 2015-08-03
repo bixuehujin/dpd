@@ -13,6 +13,15 @@
       "src": "dist",
       "dst": "/path/to/target",
       "build": "gulp build"
+    },
+    {
+      "name": "copy through scp",
+      "src": "dist",
+      "dst": "scp:///path/to/target",
+      "dstOptions": {
+        "keyFile": "/path/to/ssh-keyfile"
+      },
+      "build": "gulp build"
     }
   ]
 }
