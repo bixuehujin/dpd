@@ -77,9 +77,14 @@ class ScpMover(Mover):
         host, path = self.dst.split(':', 1)
         tmp = self.dst + '.' + str(time())
 
+        self.exec_remote(host, 'mkdir -p %s' % os.path.dirname(path))
+
         cmd = 'scp -o BatchMode=yes -o StrictHostKeyChecking=no  -r  %s %s %s' % (self.build_ssh_extra_params(), src, tmp)
         print 'Start copy files'
-        os.system(cmd)
+        
+        if os.system(cmd) != 0:
+            print 'Failed to copy files via scp'
+            return
 
         print 'Deploy copied files'
         
@@ -97,6 +102,8 @@ class ScpMover(Mover):
             fi
         ''' % (path, path, path, tmpPath, path, path, path)
 
-        self.exec_remote(host, command);
-
-        print 'Deploy success'
+        if self.exec_remote(host, command) == 0:
+            print 'Deployed successfully'
+        else:
+            print 'Deployed failed'
+        
