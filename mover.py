@@ -107,3 +107,5 @@ class ScpMover(Mover):
         else:
             print 'Deployed failed'
         
+        if os.path.exists(src):
+            shutil.rmtree(src)
