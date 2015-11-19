@@ -17,7 +17,7 @@ node server.js
 
 ## deployment.json 说明
 
-~~~
+```
 {
   "name": "name",
   "type": "gulp", // 构建工具类型
@@ -33,15 +33,15 @@ node server.js
     }
    ]
 }
-~~~
+```
 
 ### dst格式
 
 dst采用类URL格式，由schema和path两部分组成并由“://”分隔，如：
 
-~~~
+```
 [[schema]://]path/to/dst
-~~~
+```
 
 其中 schema 和 '://' 可以省略，目前 dpd 支持两种 schema 类型，file 和 scp，缺省为 file。
 
