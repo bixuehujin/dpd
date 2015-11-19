@@ -86,7 +86,7 @@ class Builder(object):
 
 
 	def build_target(self, build_type, target):
-		if 'branch' in target and target.branch != git_branch:
+		if 'branch' in target and target['branch'] != git_branch:
 			return
 
 		if build_type == 'gulp' and 'build' not in target:
