@@ -35,7 +35,7 @@ class Builder(object):
 		if not os.path.isdir(target_path  + '/.git'):
 			self.exec_command("git clone %s . --depth=10" % git_url)			
 		else:
-			self.exec_command("git reset --hard master && git remote set-url origin %s && git fetch origin && git checkout origin" % git_url)
+			self.exec_command("git reset --hard && git remote set-url origin %s && git fetch origin && git checkout origin %s" % (git_url, git_branch))
 
 
 	def load_config(self):
