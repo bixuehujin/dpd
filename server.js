@@ -52,6 +52,7 @@ http.createServer(function (req, res) {
       GIT_PATH: path,
       GIT_URL: obj.repository.url,
       GIT_SSH: __dirname + '/git_ssh',
+      GIT_BRANCH: obj.ref.split('/').pop(),
       DEFAULT_TARGET_PATH: './targets'
     };
 

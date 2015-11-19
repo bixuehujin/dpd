@@ -9,6 +9,7 @@ from mover import Mover
 
 git_url = os.environ['GIT_URL']
 git_path = os.environ['GIT_PATH']
+git_branch = os.environ['GIT_BRANCH']
 base_dir = os.getcwd();
 default_target_path = os.environ['DEFAULT_TARGET_PATH']
 
@@ -85,6 +86,9 @@ class Builder(object):
 
 
 	def build_target(self, build_type, target):
+		if 'branch' in target and target.branch != git_branch:
+			return
+
 		if build_type == 'gulp' and 'build' not in target:
 			target['build'] = 'gulp build'
 		if build_type == 'grunt' and 'build' not in target:

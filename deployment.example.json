@@ -4,18 +4,21 @@
   "targets": [
     {
       "name": "prod",
+      "branch": "the branch to deploy",
       "src": "dist",
       "dst": "/path/to/target",
       "build": "gulp build-prod"
     },
     {
       "name": "test",
+      "branch": "the branch to deploy",
       "src": "dist",
       "dst": "/path/to/target",
       "build": "gulp build"
     },
     {
       "name": "copy through scp",
+      "branch": "the branch to deploy",
       "src": "dist",
       "dst": "scp:///path/to/target",
       "dstOptions": {
