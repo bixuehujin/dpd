@@ -10,6 +10,7 @@ from mover import Mover
 git_url = os.environ['GIT_URL']
 git_path = os.environ['GIT_PATH']
 git_branch = os.environ['GIT_BRANCH']
+git_commit = os.environ['GIT_COMMIT']
 base_dir = os.getcwd();
 default_target_path = os.environ['DEFAULT_TARGET_PATH']
 
@@ -35,7 +36,7 @@ class Builder(object):
 		if not os.path.isdir(target_path  + '/.git'):
 			self.exec_command("git clone %s . --depth=10" % git_url)			
 		else:
-			self.exec_command("git reset --hard && git remote set-url origin %s && git fetch origin && git checkout origin %s" % (git_url, git_branch))
+			self.exec_command("git reset --hard && git remote set-url origin %s && git fetch origin && git checkout %s" % (git_url, git_commit))
 
 
 	def load_config(self):
